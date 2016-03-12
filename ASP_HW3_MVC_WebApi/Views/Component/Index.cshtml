@@ -1,0 +1,234 @@
+﻿@using Homework2;
+@using System.Web.Mvc;
+@model IDictionary<string, Component>
+
+@{
+    ViewBag.Title = "Дом";
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+
+    <title>Дом</title>
+
+    @Scripts.Render("~/scripts/jquery-1.10.2.min.js")
+
+    <style>
+        .component-div {
+            border: 2px solid gray;
+            float: left;
+            margin: 3px;
+            padding: 3px;
+            background-color: lightgray;
+        }
+
+        .element-div {
+            border: 1px solid black;
+            float: left;
+            margin: 2px;
+            padding: 2px;
+            text-align: center;
+            border-radius: 5px;
+            min-width: 50px;
+            display: inline-block;
+            text-decoration: none;
+            color: black;
+            background-color: #DDD;
+        }
+
+        .delete-div {
+            border: 2px solid red;
+            float: right;
+            margin: 3px;
+            padding: 3px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 5px;
+            min-width: 50px;
+            display: inline-block;
+            text-decoration: none;
+            color: black;
+            background-color: #DDD;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <br />
+
+    @foreach (var item in Model)
+    {
+        <div id="@item.Key-div" class="component-div">
+
+            <span id="@item.Key-res">@item.Value.Info()</span><br />
+
+            @if (item.Value is Fridge)
+            {
+                <div id="text" style="text-align:center"><b>>Web Api<</b></div>
+
+                <button id="@item.Key-on">Включить</button>
+                <button id="@item.Key-off">Погасить</button>
+
+                <button id="@item.Key-open">Открыть</button>
+                <button id="@item.Key-close">Закрыть</button>    <br />
+
+                <span class="element-div">
+                    Режим:
+                    @Html.DropDownList(@item.Key + "-valueBox", (IEnumerable<SelectListItem>)ViewBag.modesList)
+                    <button id="@item.Key-set">Установить</button>    <br />
+                </span>
+
+                @*<br />
+                <span class="element-div">
+                    Key компонента:
+                    <input type="text" id="n" value="@item.Key" />
+                </span>*@
+                
+                @Html.Hidden(@item.Key + "-name", @item.Key)
+            }
+
+
+            else if (item.Value is IPowerable)
+            {
+                <a href="/Component/On?name=@item.Key" class="element-div" style="background-color:lightgreen">Включить</a>
+                <a href="/Component/Off?name=@item.Key" class="element-div" style="background-color:pink">Погасить</a>
+            }
+
+            else if (item.Value is IOpenable)
+            {
+                <a href="~/Component/Open?name=@item.Key" class="element-div">Открыть</a>
+                <a href="~/Component/Close?name=@item.Key" class="element-div">Закрыть</a>
+            }
+
+            @if (item.Value is TV)
+            {
+                <a href="~/Component/PrevChannel?name=@item.Key" class="element-div">Пред.канал</a>
+                <a href="~/Component/NextChannel?name=@item.Key" class="element-div">След.канал</a>
+            }
+
+            @if (item.Value is MediaCenter || item.Value is Oven)
+            {           
+                using (Html.BeginForm("Set", "Component"))
+                {
+                    <span class="element-div">
+                        @Html.Hidden("name", @item.Key)
+
+                        @if (item.Value is MediaCenter)
+                        {
+                            <span>Громкость:</span>
+
+                            @Html.TextBox("valueBox", ((MediaCenter)item.Value).Volume, new { id = "id" + item.Key, size = "3" })
+                            <label style="color:red">@ViewBag.NoInt</label>
+                            <input type="submit" value="Установить громкость">
+                        }
+
+                        @if (item.Value is Oven)
+                        {
+                            <span>Температура:</span>
+
+                            @Html.TextBox("valueBox", ((Oven)item.Value).Temperature, new { id = "id" + item.Key, size = "3" })
+                            <label style="color:red">@ViewBag.NoInt</label>
+                            <input type="submit" value="Установить температуру">
+                        }
+                    </span>
+                }
+
+            }
+
+            <br />
+            @if (item.Value is Fridge)
+            {
+                <button id="@item.Key-del" class="delete-div">Web Api удаление</button>
+            }
+            else
+            {
+                <a href="/Component/Delete?name=@item.Key" class="delete-div">Удалить</a>
+            }
+
+        </div>
+
+
+
+        <script>
+            $("#@item.Key-on").click(function () {
+                @*alert("@item.Key")
+                alert($("#@item.Key-name").val())*@
+                $.ajax({
+                    url: "/api/Fridge/on/" + $("#@item.Key-name").val(),
+                    type: "PUT",
+                    success: function (data) {
+                        $("#@item.Key-res").html(data);
+                    }
+                });
+            });
+
+            $("#@item.Key-off").click(function () {
+                $.ajax({
+                    url: "/api/Fridge/off/" + $("#@item.Key-name").val(),
+                    type: "PUT",
+                    success: function (data) {
+                        $("#@item.Key-res").html(data);
+                    }
+                });
+            });
+
+            $("#@item.Key-open").click(function () {
+                $.ajax({
+                    url: "/api/Fridge/open/" + $("#@item.Key-name").val(),
+                    type: "PUT",
+                    success: function (data) {
+                        $("#@item.Key-res").html(data);
+                    }
+                });
+            });
+
+            $("#@item.Key-close").click(function () {
+                $.ajax({
+                    url: "/api/Fridge/close/" + $("#@item.Key-name").val(),
+                    type: "PUT",
+                    success: function (data) {
+                        $("#@item.Key-res").html(data);
+                    }
+                });
+            });
+
+            $("#@item.Key-del").click(function () {
+                $.ajax({
+                    url: "/api/Fridge/" + $("#@item.Key-name").val(),
+                    type: "DELETE",
+                    success: function (data) {
+                        $("#@item.Key-div").remove();
+                    }
+                });
+            });
+
+
+            $("#@item.Key-set").click(function () {
+                $.ajax({
+                    url: "/api/Fridge/set/" + $("#@item.Key-name").val() + "/" + $("#@item.Key-valueBox").val(),
+                    type: "PUT",
+                    success: function (data) {
+                        $("#@item.Key-res").html(data);
+                    }
+                });
+            });
+
+
+        </script>
+
+
+
+    }
+
+
+
+
+
+
+</body>
+</html>
